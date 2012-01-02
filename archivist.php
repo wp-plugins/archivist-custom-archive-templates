@@ -3,7 +3,7 @@
 Plugin Name: Archivist - Custom Archive Templates
 Plugin URI: http://www.FarBeyondProgramming.com/wordpress/plugin-archivist-custom-archive
 Description: Shortcode Plugin to display an archive by category, tag or custom query.
-Version: 1.3.7
+Version: 1.3.8
 Author: Eric Teubert
 Author URI: ericteubert@googlemail.com
 License: MIT
@@ -101,6 +101,8 @@ if ( ! class_exists( 'archivist' ) ) {
  
 		static private $classobj = NULL;
 		public $textdomain = 'archivist';
+		// current template settings
+		static $settings = NULL;
  
 		public function __construct() {
 			$this->load_textdomain();
@@ -308,61 +310,67 @@ if ( ! class_exists( 'archivist' ) ) {
 			// categories with custom separator
 			$template = preg_replace_callback(
 			    '/%TAGS\|(.*)%/',
-			    create_function(
-					'$matches',
-					'return get_the_tag_list( "", $matches[1], "" );'
-				),
+			    function ( $matches ) {
+			        return get_the_tag_list( "", $matches[ 1 ], "" );
+			    },
 			 	$template
 			 );
 
 			// categories with custom separator
 			$template = preg_replace_callback(
 			    '/%CATEGORIES\|(.*)%/',
-			    create_function(
-					'$matches',
-					'return get_the_category_list( $matches[1] );'
-				),
+			    function ( $matches ) {
+			        return get_the_category_list( $matches[ 1 ] );
+			    },
 			 	$template
 			 );
+
+			// custom post meta with separator
+            $template = preg_replace_callback(
+                '/%POST_META\|(.*?)\|(.*)%/',
+                function ( $matches ) {
+                    global $post;
+                    $list = get_post_meta( $post->ID, $matches[ 1 ], false );
+                    return implode( $matches[ 2 ], $list );
+                },
+                 $template
+             );
 
 			// custom post meta
 			$template = preg_replace_callback(
 			    '/%POST_META\|(.*)%/',
-			    create_function(
-					'$matches',
-					'global $post; return get_post_meta( $post->ID, "$matches[1]", true );'
-				),
+			    function ( $matches ) {
+			        global $post;
+			        return get_post_meta( $post->ID, $matches[ 1 ], true );
+			    },
 			 	$template
-			 );			
+			 );
 			
 			// custom date format
 			$template = preg_replace_callback(
 			    '/%DATE\|(.*)%/',
-			    create_function(
-					'$matches',
-					'return get_the_date($matches[1]);'
-				),
+			    function ( $matches ) {
+			        return get_the_date( $matches[ 1 ] );
+			    },
 			 	$template
 			 );
-			
+
 			// custom post thumbnails
 			$template = preg_replace_callback(
 			    '/%POST_THUMBNAIL\|(\d+)x(\d+)%/',
-			    create_function(
-					'$matches',
-					'
-					$thumb = get_the_post_thumbnail( $post->ID, array( $matches[ 1 ], $matches[ 2 ] ) );
-					
-					
-					if ( ! $thumb ) {
-						$default_thumb = get_option( "archivist_default_thumb", PA_THUMB_DEFAULT );
-						if ( $default_thumb ) {
-							$thumb = "<img src=\"$default_thumb\" alt=\"Archive Thumb\" width=\"" . $matches[ 1 ] . "\" height=\"" . $matches[ 2 ] . "\">";
+			    function ( $matches ) {
+						global $post;
+			    	$thumb = get_the_post_thumbnail( $post->ID, array( $matches[ 1 ], $matches[ 2 ] ) );
+						
+						if ( ! $thumb ) {
+							$default_thumb = archivist::$settings[ 'default_thumb' ];
+							if ( $default_thumb ) {
+								$thumb = "<img src=\"$default_thumb\" alt=\"Archive Thumb\" width=\"" . $matches[ 1 ] . "\" height=\"" . $matches[ 2 ] . "\">";
+							}
 						}
-					}
-					
-					return $thumb;'
-				),
+
+						return $thumb;
+			    },
 			 	$template
 			 );
 			
@@ -413,13 +421,16 @@ if ( ! class_exists( 'archivist' ) ) {
 		}
 		
 		private function display_by_loop( $loop, $template = false ) {
-			$all_settings = $this->get_template_options();;
+			global $post;
+			
+			$all_settings = $this->get_template_options();
 			
 			if ( ! $template ) {
 				$template = self::get_default_template_name();
 			}
 			
 			$settings = $all_settings[ $template ];
+			archivist::$settings = $settings;
 			
 			if ( ! $settings ) {
 				return '<div>' . wp_sprintf( __( 'Archivist Error: Unknown template "%1s"', archivist::get_textdomain() ), $template ) . '</div>';
@@ -692,6 +703,7 @@ if ( ! class_exists( 'archivist' ) ) {
 								  	<pre>%TAGS|...%</pre><br/><?php echo __( 'The post tags with a custom separator. Example: <pre>%TAGS|, %</pre>', archivist::get_textdomain() ) ?> <br/><br/>
 								  	<pre>%EXCERPT%</pre><br/><?php echo __( 'The post excerpt.', archivist::get_textdomain() ) ?> <br/><br/>
 								  	<pre>%POST_META|...%</pre><br/><?php echo __( 'Any post meta. Example: <pre>%POST_META|duration%</pre>', archivist::get_textdomain() ) ?> <br/><br/>
+								  	<pre>%POST_META|...|...%</pre><br/><?php echo __( 'Any post meta list, separated by custom HTML. Example: <pre>%POST_META|guest|&lt;br&gt;%</pre>', archivist::get_textdomain() ) ?> <br/><br/>
 								  	<pre>%DATE%</pre><br/><?php echo __( 'The post date with default format.', archivist::get_textdomain() ) ?> <br/><br/>
 								  	<pre>%DATE|...%</pre><br/><?php echo __( 'The post date with custom format. Example: <pre>%DATE|Y/m/d%</pre>', archivist::get_textdomain() ) ?> <br/><br/>
 								  	<pre>%POST_THUMBNAIL|...x...%</pre><br/><?php echo __( 'The post thumbnail with certain dimensions. Example: <pre>%POST_THUMBNAIL|75x75%</pre>', archivist::get_textdomain() ) ?> <br/><br/>
