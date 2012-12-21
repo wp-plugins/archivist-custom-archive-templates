@@ -3,7 +3,7 @@ Contributors: eteubert
 Donate link: http://www.FarBeyondProgramming.com/wordpress/plugin-archivist-custom-archive
 Tags: archive, loop, shortcode, category, tag, custom, query, template, html, customizable
 Requires at least: 3.0
-Tested up to: 3.3.1
+Tested up to: 3.5
 Stable tag: trunk
 
 Shortcode Plugin to display an archive by category, tag or custom query. Customizable via HTML templates.
@@ -94,6 +94,10 @@ Visit https://github.com/eteubert/archivist-custom-archive-templates, fork the p
 2. Example Archive
 
 == Changelog ==
+
+= 1.5 =
+* Enhancement: display_by_query: default to displaying all posts (like tag and category display)
+* Feature: enable shortcodes in templates
 
 = 1.4.1 =
 * hotfix: forgot to deploy a new file to svn
