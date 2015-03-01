@@ -1,9 +1,9 @@
 === Archivist - Custom Archive Templates ===
 Contributors: eteubert
-Donate link: http://www.FarBeyondProgramming.com/wordpress/plugin-archivist-custom-archive
+Donate link: http://flattr.com/thing/396382/WordPress-Plugin-Archivist-Custom-Archive-Templates
 Tags: archive, loop, shortcode, category, tag, custom, query, template, html, customizable
 Requires at least: 3.0
-Tested up to: 3.5
+Tested up to: 4.1.1
 Stable tag: trunk
 
 Shortcode Plugin to display an archive by category, tag or custom query. Customizable via HTML templates.
@@ -94,6 +94,12 @@ Visit https://github.com/eteubert/archivist-custom-archive-templates, fork the p
 2. Example Archive
 
 == Changelog ==
+
+= 1.6 =
+
+* Enhancement: Use Ace editor with HTML and CSS syntax highlighting
+* Fix: PHP warnings
+* Fix: Some links in about box
 
 = 1.5.1 =
 * Hotfix: Typo, sorry
